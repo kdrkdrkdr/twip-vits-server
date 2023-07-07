@@ -15,7 +15,7 @@ from flask import (
 )
 from io import BytesIO
 import scipy.io.wavfile as swavfile
-from synthesys import generate_audio, SAMPLE_RATE
+from synthesis import generate_audio, SAMPLE_RATE
 
 app = Flask(__name__)
 
