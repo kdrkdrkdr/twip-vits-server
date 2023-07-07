@@ -2,3 +2,7 @@
 
 data/models/*
 !data/models/.gitkeep
+
+*__pycache__*
+
+ms_istft_vits/pretrained_model/*.pth

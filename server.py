@@ -1,4 +1,7 @@
 import os
+import sys
+
+sys.path.append('ms_istft_vits')
 import requests
 from flask import (
     Flask,
@@ -12,10 +15,7 @@ from flask import (
 )
 from io import BytesIO
 import scipy.io.wavfile as swavfile
-
-from synthesys import SAMPLING_RATE
-from synthesys import generate_audio_glow_tts
-from text_processer import normalize_text, process_text
+from synthesys import generate_audio, SAMPLE_RATE
 
 app = Flask(__name__)
 
@@ -28,12 +28,7 @@ def allow_cors(response):
 
 @app.route("/")
 def index():
-    return redirect(url_for("text_inference"))
-
-
-@app.route("/tts-server/text-inference")
-def text_inference():
-    return render_template("text-inference.html")
+    return redirect(url_for("open_captions_overlay"))
 
 
 @app.route("/tts-server/cc-overlay")
@@ -41,26 +36,18 @@ def open_captions_overlay():
     return render_template("cc-overlay.html")
 
 
-@app.route("/tts-server/api/process-text", methods=["POST"])
-def text():
-    text = request.json.get("text", "")
-    texts = process_text(text)
 
-    return jsonify(texts)
-
-
-@app.route("/tts-server/api/infer-glowtts")
-def infer_glowtts():
+@app.route("/tts-server/api/vits")
+def infer_vits():
     text = request.args.get("text", "")
 
     if not text:
         return "text shouldn't be empty", 400
-    text = normalize_text(text.strip())
 
     wav = BytesIO()
     try:
-        audio = generate_audio_glow_tts(text)
-        swavfile.write(wav, rate=SAMPLING_RATE, data=audio.numpy())
+        audio = generate_audio(text)
+        swavfile.write(wav, rate=SAMPLE_RATE, data=audio)
 
     except Exception as e:
         return f"Cannot generate audio: {str(e)}", 500
@@ -105,7 +92,7 @@ def twip_proxy(path):
             if (o.src.startsWith('https://www.google.com/speech-api/v1/synthesize?text=')) {{
                 o.src = o.src.replace(
                     'https://www.google.com/speech-api/v1/synthesize?text=',
-                    '/tts-server/api/infer-glowtts?text='
+                    '/tts-server/api/vits?text='
                 );
                 o.html5 = false;
                 o.volume = o.volume * 2;
